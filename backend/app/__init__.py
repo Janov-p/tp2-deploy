@@ -24,15 +24,27 @@ def create_app(config_name='development'):
     # Initialize extensions with app
     db.init_app(app)
     jwt.init_app(app)
-    CORS(app)
-    api.init_app(app)
     
     # Add API namespaces
     from .auth.api import api as auth_api
     api.add_namespace(auth_api)
     
+    # Initialize API with app
+    api.init_app(app)
+    
+    # Configure CORS
+    CORS(app, 
+         resources={r"/*": {
+             "origins": "http://localhost:5173",
+             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+             "allow_headers": ["Content-Type", "Authorization"],
+             "supports_credentials": True,
+             "expose_headers": ["Content-Type", "Authorization"]
+         }}
+    )
+    
     # Create database tables
     with app.app_context():
         db.create_all()
     
-    return app 
+    return app
