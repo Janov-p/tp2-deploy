@@ -1,13 +1,18 @@
-from flask import Flask, jsonify
+import os
+from dotenv import load_dotenv
+from app import create_app
 
-app = Flask(__name__)
+# Load environment variables from .env file
+load_dotenv()
 
-@app.route('/')
-def home():
-    return jsonify({
-        "message": "Hello, World!",
-        "status": "success"
-    })
+app = create_app()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    env = app.config['FLASK_ENV']
+    
+    if env == 'production':
+        # Production settings
+        app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=False)
+    else:
+        # Development settings
+        app.run(debug=True)
