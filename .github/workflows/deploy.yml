@@ -52,8 +52,44 @@ jobs:
         service: ${{ env.SERVICE_NAME }}
         image: europe-west1-docker.pkg.dev/${{ env.PROJECT_ID }}/flask-app/flask-app:${{ github.sha }}
         region: ${{ env.REGION }}
-        flags: '--platform managed --allow-unauthenticated'
+        flags: '--platform managed --allow-unauthenticated --add-cloudsql-instances ${{ secrets.CLOUD_SQL_CONNECTION_NAME }} --service-account github-actions@${{ env.PROJECT_ID }}.iam.gserviceaccount.com'
         env_vars: |
           FLASK_ENV=production
           JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
-          PORT=8080 
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install Cloud SQL Proxy
+      run: |
+        wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O /usr/local/bin/cloud_sql_proxy
+        chmod +x /usr/local/bin/cloud_sql_proxy
+
+    - name: Run Database Migrations
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        # Start Cloud SQL Proxy in the background
+        cloud_sql_proxy -instances=${{ secrets.CLOUD_SQL_CONNECTION_NAME }}=tcp:5432 &
+        # Wait for the proxy to start
+        sleep 5
+        # Run migrations using TCP connection
+        export DATABASE_URL="postgresql+psycopg2://flask_app_user:flask_app_password@localhost:5432/flask_app"
+        # Get the latest migration version
+        LATEST_REV=$(alembic heads | grep -o '[a-f0-9]\{12\}' | head -n 1)
+        # Get current migration version
+        CURRENT_REV=$(alembic current 2>/dev/null | grep -o '[a-f0-9]\{12\}' || echo "none")
+        if [ "$CURRENT_REV" = "none" ]; then
+          echo "No migrations applied yet, running initial migration"
+          alembic stamp head
+          alembic upgrade head
+        elif [ "$CURRENT_REV" != "$LATEST_REV" ]; then
+          echo "Current migration ($CURRENT_REV) is not the latest ($LATEST_REV), upgrading"
+          alembic upgrade head
+        else
+          echo "Database is up to date at revision $CURRENT_REV"
+        fi 

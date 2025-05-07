@@ -5,6 +5,7 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first to leverage Docker cache
@@ -15,7 +16,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Set environment variables
-ENV PORT=8080
 ENV FLASK_ENV=production
 ENV PYTHONUNBUFFERED=1
 
@@ -30,4 +30,5 @@ CMD exec gunicorn --bind :$PORT \
     --timeout 0 \
     --access-logfile - \
     --error-logfile - \
-    app:app 
+    --log-level info \
+    wsgi:app 
