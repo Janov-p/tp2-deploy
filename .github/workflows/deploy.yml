@@ -79,7 +79,17 @@ jobs:
         sleep 5
         # Run migrations using TCP connection
         export DATABASE_URL="postgresql+psycopg2://flask_app_user:flask_app_password@localhost:5432/flask_app"
-        # Create alembic_version table if it doesn't exist
-        python -c 'import sqlalchemy as sa; from sqlalchemy import create_engine; import os; engine = create_engine(os.environ["DATABASE_URL"]); conn = engine.connect(); conn.execute(sa.text("CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(32) NOT NULL)")); conn.commit(); conn.close()'
-        # Run migrations
-        alembic upgrade head 
+        # Get the latest migration version
+        LATEST_REV=$(alembic heads | grep -o '[a-f0-9]\{12\}' | head -n 1)
+        # Get current migration version
+        CURRENT_REV=$(alembic current 2>/dev/null | grep -o '[a-f0-9]\{12\}' || echo "none")
+        if [ "$CURRENT_REV" = "none" ]; then
+          echo "No migrations applied yet, running initial migration"
+          alembic stamp head
+          alembic upgrade head
+        elif [ "$CURRENT_REV" != "$LATEST_REV" ]; then
+          echo "Current migration ($CURRENT_REV) is not the latest ($LATEST_REV), upgrading"
+          alembic upgrade head
+        else
+          echo "Database is up to date at revision $CURRENT_REV"
+        fi 
