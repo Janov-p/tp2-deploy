@@ -32,6 +32,10 @@ def create_app(config_name='development'):
     # Initialize API with app
     api.init_app(app)
     
+    # Register blueprints
+    from .main import bp as main_bp
+    app.register_blueprint(main_bp, url_prefix='/')  # Explicitly set url_prefix
+    
     # Configure CORS
     CORS(app, 
          resources={r"/*": {
