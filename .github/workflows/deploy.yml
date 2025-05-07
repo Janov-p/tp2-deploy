@@ -10,7 +10,7 @@ env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   SERVICE_NAME: flask-app
   REGION: europe-west1  # Changed to EU West region
-  REGISTRY: ghcr.io
+  REPOSITORY: europe-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/flask-app
 
 jobs:
   deploy:
@@ -24,20 +24,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Build and Push Container
-      run: |
-        cd backend
-        REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-        docker build -t ${{ env.REGISTRY }}/$REPO_OWNER/flask-app:${{ github.sha }} .
-        docker push ${{ env.REGISTRY }}/$REPO_OWNER/flask-app:${{ github.sha }}
-
     - name: Google Auth
       id: auth
       uses: google-github-actions/auth@v1
@@ -49,10 +35,20 @@ jobs:
       with:
         project_id: ${{ env.PROJECT_ID }}
 
+    - name: Configure Docker
+      run: |
+        gcloud auth configure-docker europe-west1-docker.pkg.dev
+
+    - name: Build and Push Container
+      run: |
+        cd backend
+        docker build -t ${{ env.REPOSITORY }}:${{ github.sha }} .
+        docker push ${{ env.REPOSITORY }}:${{ github.sha }}
+
     - name: Deploy to Cloud Run
       uses: google-github-actions/deploy-cloudrun@v1
       with:
         service: ${{ env.SERVICE_NAME }}
-        image: ${{ env.REGISTRY }}/$REPO_OWNER/flask-app:${{ github.sha }}
+        image: ${{ env.REPOSITORY }}:${{ github.sha }}
         region: ${{ env.REGION }}
         flags: '--platform managed --allow-unauthenticated' 
