@@ -31,4 +31,4 @@ CMD exec gunicorn --bind :$PORT \
     --access-logfile - \
     --error-logfile - \
     --log-level info \
-    app:app 
+    wsgi:app 
