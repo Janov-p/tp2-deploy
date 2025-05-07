@@ -42,13 +42,14 @@ jobs:
     - name: Build and Push Container
       run: |
         cd backend
-        docker build -t ${{ env.REPOSITORY }}:${{ github.sha }} .
-        docker push ${{ env.REPOSITORY }}:${{ github.sha }}
+        IMAGE_NAME="europe-west1-docker.pkg.dev/${{ env.PROJECT_ID }}/flask-app/flask-app:${{ github.sha }}"
+        docker build -t $IMAGE_NAME .
+        docker push $IMAGE_NAME
 
     - name: Deploy to Cloud Run
       uses: google-github-actions/deploy-cloudrun@v1
       with:
         service: ${{ env.SERVICE_NAME }}
-        image: ${{ env.REPOSITORY }}:${{ github.sha }}
+        image: europe-west1-docker.pkg.dev/${{ env.PROJECT_ID }}/flask-app/flask-app:${{ github.sha }}
         region: ${{ env.REGION }}
         flags: '--platform managed --allow-unauthenticated' 
