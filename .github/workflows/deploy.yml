@@ -58,8 +58,16 @@ jobs:
           JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
           DATABASE_URL=${{ secrets.DATABASE_URL }}
 
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
     - name: Run Database Migrations
       run: |
         cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        export FLASK_APP=app.py
         export DATABASE_URL=${{ secrets.DATABASE_URL }}
         flask db upgrade 
