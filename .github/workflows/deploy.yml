@@ -11,7 +11,7 @@ env:
   SERVICE_NAME: flask-app
   REGION: europe-west1  # Changed to EU West region
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/${{ env.SERVICE_NAME }}
+  IMAGE_NAME: ${{ github.repository }}/flask-app
 
 jobs:
   deploy:
