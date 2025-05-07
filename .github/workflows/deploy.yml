@@ -26,8 +26,9 @@ jobs:
         project_id: ${{ env.PROJECT_ID }}
         service_account_key: ${{ secrets.GCP_SA_KEY }}
 
-    - name: Authorize Docker push
-      run: gcloud auth configure-docker
+    - name: Configure Docker
+      run: |
+        gcloud auth configure-docker europe-west1-docker.pkg.dev,gcr.io
 
     - name: Build and Push Container
       run: |
