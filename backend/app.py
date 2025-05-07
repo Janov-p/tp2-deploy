@@ -11,8 +11,9 @@ if __name__ == '__main__':
     env = app.config['FLASK_ENV']
     
     if env == 'production':
-        # Production settings
-        app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=False)
+        # Production settings - Cloud Run will set PORT automatically
+        port = int(os.getenv('PORT', 8080))
+        app.run(host='0.0.0.0', port=port, debug=False)
     else:
         # Development settings
         app.run(debug=True)

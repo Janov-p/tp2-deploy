@@ -5,7 +5,14 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    wget \
+    gnupg2 \
+    lsb-release \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Cloud SQL proxy
+RUN wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O /usr/local/bin/cloud_sql_proxy \
+    && chmod +x /usr/local/bin/cloud_sql_proxy
 
 # Copy requirements first to leverage Docker cache
 COPY requirements.txt .
@@ -15,7 +22,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Set environment variables
-ENV PORT=8080
+# Note: PORT is automatically set by Cloud Run
 ENV FLASK_ENV=production
 ENV PYTHONUNBUFFERED=1
 
