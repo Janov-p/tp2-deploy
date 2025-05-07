@@ -79,4 +79,7 @@ jobs:
         sleep 5
         # Run migrations using TCP connection
         export DATABASE_URL="postgresql+psycopg2://flask_app_user:flask_app_password@localhost:5432/flask_app"
+        # Create alembic_version table if it doesn't exist
+        python -c 'import sqlalchemy as sa; from sqlalchemy import create_engine; engine = create_engine("$DATABASE_URL"); conn = engine.connect(); conn.execute(sa.text("CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(32) NOT NULL)")); conn.commit(); conn.close()'
+        # Run migrations
         alembic upgrade head 
