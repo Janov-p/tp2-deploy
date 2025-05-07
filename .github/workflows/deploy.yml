@@ -11,7 +11,6 @@ env:
   SERVICE_NAME: flask-app
   REGION: europe-west1  # Changed to EU West region
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/flask-app
 
 jobs:
   deploy:
@@ -35,8 +34,9 @@ jobs:
     - name: Build and Push Container
       run: |
         cd backend
-        docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
-        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+        docker build -t ${{ env.REGISTRY }}/$REPO_OWNER/flask-app:${{ github.sha }} .
+        docker push ${{ env.REGISTRY }}/$REPO_OWNER/flask-app:${{ github.sha }}
 
     - name: Google Auth
       id: auth
@@ -53,6 +53,6 @@ jobs:
       uses: google-github-actions/deploy-cloudrun@v1
       with:
         service: ${{ env.SERVICE_NAME }}
-        image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        image: ${{ env.REGISTRY }}/$REPO_OWNER/flask-app:${{ github.sha }}
         region: ${{ env.REGION }}
         flags: '--platform managed --allow-unauthenticated' 
