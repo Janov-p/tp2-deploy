@@ -35,7 +35,7 @@ def create_app(config_name='development'):
     # Configure CORS
     CORS(app, 
          resources={r"/*": {
-             "origins": ["http://localhost:5173", "https://your-frontend-domain.com"],
+             "origins": ["http://localhost:5173", "https://tp-deploy.web.app"],
              "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
              "allow_headers": ["Content-Type", "Authorization"],
              "supports_credentials": True,
